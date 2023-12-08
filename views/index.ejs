@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+    <%- include('./partials/head.ejs') %>
+<body>
+    <div class="background-image">
+        <img src="../images/fau.png" alt="">
+    </div>
+    <div class="login-container">
+            <h1>Welcome, Uplifter!</h1>
+            <form id="login-form" action="/api/users/login" method="POST">
+                <label for="email">Email:</label>
+                <input type="text" id="email" name="email" required>
+                
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required>
+            
+
+                <button type="submit" id="loginButton">Login</button>
+            </form>
+            <p class="call-to-action">New User? 
+                <span>Register Here</span>
+            </p>
+     </div>
+
+     <div class="createAccount-container">
+        <h1>Ready to raise the bar?</h1>
+        <form id="createAccount-form">
+            <label for="createEmail">Email:</label>
+            <input type="text" id="createEmail" name="createEmail" required>
+
+
+            <label for="zNumber">Z-Number:</label>
+            <input type="text" name="zNumber" id="zNumber" required>
+
+            <label for="firstName">First Name:</label>
+            <input type="text" name="firstName" id="firstName" required>
+
+            <label for="lastName">Last Name:</label>
+            <input type="text" name="lastName" id="lastName" required>
+            
+            <label for="username">Username:</label>
+            <input type="text" name="username" id="username" required>
+
+            <label for="createPassword">Password:</label>
+            <input type="password" id="createPassword" name="createPassword" required>
+
+            <label for="rePassword">Re-enter Password:</label>
+            <input type="password" id="rePassword" name="rePassword" required>
+
+            <label for="owlCard">Owl Card:</label>
+            <input type="file" name="owlCard" id="owlCard">
+            
+            <button type="submit" id="createAccount">Create Account</button>
+        </form>
+        
+        
+        <p class="call-to-action">Already have account? 
+            
+            <span>Log In</span>
+        
+        </p>
+    </div>
+
+    <script src="/JS files/login.js"></script>
+    
+</body>
+</html>

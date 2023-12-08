@@ -1,5 +1,4 @@
-backend/.env
-backend/cloud.json
-
 .env
-cloud.json
+node_modules/ 
+node_modules
+backend/.env

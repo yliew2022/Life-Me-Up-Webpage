@@ -1,30 +1,37 @@
 require('dotenv').config()
 const express = require('express');
 const mongoose = require('mongoose')
-const CurrentStudent = require('./backend/models/currentStudent');
-const User = require('./backend/models/userModel');
+const CurrentStudent = require('./models/currentStudent');
+const User = require('./models/userModal');
 const path = require('path');
 const app = express()
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000
 const bcrypt = require('bcrypt')
 const saltRounds = 10
 const axios = require('axios')
 const cors = require('cors');
 const cookieParser = require('cookie-parser'); 
-const { Storage } = require('@google-cloud/storage')
 
-const storage = new Storage({
-    projectId :process.env.PROJECT_ID,
-    keyFilename : process.env.CLOUD_KEY
-})
 
-app.use(cors());
+// app.use(cors());
+
+const allowedOrigins = ['http://localhost:3000','https://lift-me-up-8da37724f774.herokuapp.com'];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+}));
 app.use(cookieParser()); 
 
 app.use(express.json())
 
 
-app.use(express.static(path.join(__dirname, 'frontend')));
+app.use(express.static(__dirname + "/"));
 app.use((req,res,next) =>{  
     next()
 })
@@ -36,61 +43,12 @@ app.use((req, res, next) => {
     }
     next();
   });
+console.log("DIR NAME IS ", __dirname + "/")
 
-const bucket = storage.bucket('images-boi')
 
 app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'frontend/views'));
+app.set('views', __dirname + '/views');
 
-const multer = require('multer');
-
-const upload = multer();
-
-
-app.post("/upload", upload.single('imgfile'), async (req, res) => {
-    console.log("Made it /upload");
-    console.log("Request file:", req.file);
-  
-    try {
-      if (req.file) {
-        console.log("File found, trying to upload...");
-  
-        // Assuming req.body.userId contains the user ID
-        const userId = req.body.userId;
-  
-        // Construct the image URL based on your server and bucket setup
-        const imageUrl = `https://storage.googleapis.com/images-boi/${req.file.originalname}`;
-  
-        // Update the user's profileImage field with the image URL
-        await User.findByIdAndUpdate(userId, { $set: { profileImage: imageUrl } });
-  
-        const blob = bucket.file(req.file.originalname);
-        const blobStream = blob.createWriteStream();
-  
-        blobStream.on("finish", () => {
-          res.status(200).send("Success");
-          console.log("Success");
-        });
-        blobStream.end(req.file.buffer);
-      } else {
-        console.log("Something wrong with the image");
-        res.status(400).send("Bad Request");
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      res.status(500).send(error);
-    }
-  });
-
-  app.get("/upload", async (req, res) => {
-    try {
-      const [files] = await bucket.getFiles();
-      res.send([files]);
-      console.log("Success");
-    } catch (error) {
-      res.send("Error:" + error);
-    }
-  });
 
 /*
 
@@ -111,6 +69,11 @@ app.get('/api/users', async (req, res) => {
       console.error("Error fetching users:", error);
       res.status(500).json({ error: "Internal Server Error" });
   }
+});
+
+app.get('/uploads/:imageName', (req, res) => {
+  const imageName = req.params.imageName;
+  res.sendFile(path.join(__dirname, '/', imageName));
 });
 
 app.get('/search/:id', async (req, res) => {
@@ -178,14 +141,15 @@ app.get('/profile/:id', async (req, res) => {
       const id = req.params.id
       const user = await User.findById(id).populate({
           path: 'followers',
-          select: '_id userName firstName lastName'
+          select: '_id userName firstName lastName profileImage'
       });
       console.log("User is  ", user);
       const followers = user.followers.map(follower => ({
           _id: follower._id,
           userName: follower.userName,
           firstName: follower.firstName,
-          lastName: follower.lastName
+          lastName: follower.lastName,
+          profileImage: follower.profileImage
     }));
       res.render('profile', {user, followers,title:user.userName});
 
@@ -331,9 +295,13 @@ app.delete('/api/users/delete/:userId', async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-     await User.updateMany({},
-      { $pull: { followers: user._id } }, { "multi": true }
-      )
+    await User.updateMany(
+      {},
+      { $pull: { followers: user._id } },
+      { writeConcern: { w: 'majority' } }
+    );
+    
+    
 
     // Remove the user using findOneAndDelete
     await User.findOneAndDelete({ _id: userId });
@@ -438,31 +406,36 @@ app.delete('/api/users/removeAllFollowers/:id', async (req, res) => {
 });
 
 //UPDATE a single user
-app.patch('/api/users/update/:id', async(req,res) =>{
+app.patch('/api/users/update/:id', async(req, res) => {
   try {
       const id = req.params.id;
       const user = await User.findById(id);
-  
+
       if (!user) {
-        return res.status(404).json({ error: 'User not found' });
+          return res.status(404).json({ error: 'User not found' });
       }
-  
+
       // Update user's profile based on the request body
       user.personalProfile = req.body.personalProfile || user.personalProfile;
       user.userName = req.body.userName || user.userName;
       user.gymProfile = req.body.gymProfile || user.gymProfile;
       user.password = req.body.password || user.password;
-  
+
+      // Check if the request body contains a profileImage field
+      if (req.body.profileImage) {
+          user.profileImage = req.body.profileImage;
+      }
+
       // Save the updated user
       await user.save();
-  
+
       return res.status(200).json(user);
-  
-    } catch (error) {
+
+  } catch (error) {
       console.error("Error:", error);
       return res.status(500).json({ error: 'Internal Server Error' });
-    }
-  });
+  }
+});
 
 
 app.get('/api/users/getFollowers/:id', async (req,res)=>{
