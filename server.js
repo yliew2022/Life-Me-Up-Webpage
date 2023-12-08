@@ -55,7 +55,7 @@ app.set('views', __dirname + '/views');
 ----------------------USERS API'S BELOW--------------------------------------------------------------------------------------
 */
 //Getting the login page
-app.get('/', (req,res) =>{
+app.get('', (req,res) =>{
   res.render('index', {title: "Log in"})
 })
 
