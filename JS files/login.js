@@ -27,7 +27,7 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
   const password = document.getElementById("password").value;
   
   try {
-      const response = await fetch('/api/users/login', {
+      const response = await fetch('https://lifemeuplatest-4fd195746a8a.herokuapp.com/api/users/login', {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
