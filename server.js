@@ -480,9 +480,9 @@ mongoose.connect(process.env.MONGO_URI, {
   writeConcern: { w: 'majority' }
 })
   .then(() =>{
-      app.listen(PORT, ()=>{
-          console.log("Connected to Database. Listening on port ", PORT)
-      })
+    app.listen(process.env.PORT || 3000, function(){
+      console.log("Express server listening on port %d in %s mode", this.address().port, app.settings.env);
+    })
   })
   .catch((error) =>{
     console.error("Database connection error:", error);
