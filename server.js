@@ -2,7 +2,7 @@ require('dotenv').config()
 const express = require('express');
 const mongoose = require('mongoose')
 const CurrentStudent = require('./models/currentStudent');
-const User = require('./models/userModal');
+const User = require('./models/userModel');
 const path = require('path');
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -138,15 +138,14 @@ app.get('/profile/:id', async (req, res) => {
       const id = req.params.id
       const user = await User.findById(id).populate({
           path: 'followers',
-          select: '_id userName firstName lastName profileImage'
+          select: '_id userName firstName lastName'
       });
       console.log("User is  ", user);
       const followers = user.followers.map(follower => ({
           _id: follower._id,
           userName: follower.userName,
           firstName: follower.firstName,
-          lastName: follower.lastName,
-          profileImage: follower.profileImage
+          lastName: follower.lastName
     }));
       res.render('profile', {user, followers,title:user.userName});
 
@@ -292,13 +291,9 @@ app.delete('/api/users/delete/:userId', async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    await User.updateMany(
-      {},
-      { $pull: { followers: user._id } },
-      { writeConcern: { w: 'majority' } }
-    );
-    
-    
+     await User.updateMany({},
+      { $pull: { followers: user._id } }, { "multi": true }
+      )
 
     // Remove the user using findOneAndDelete
     await User.findOneAndDelete({ _id: userId });
@@ -481,7 +476,9 @@ try {
 })
 
 // connect to database
-mongoose.connect(process.env.MONGO_URI)
+mongoose.connect(process.env.MONGO_URI, {
+  writeConcern: { w: 'majority' }
+})
   .then(() =>{
       app.listen(PORT, ()=>{
           console.log("Connected to Database. Listening on port ", PORT)

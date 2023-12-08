@@ -55,7 +55,7 @@ removeButtons.forEach(removeButton => {
 
                 const removedUser = await response.json();
                 if (response.ok) {
-                    // console.log(removedUser);
+                    console.log(removedUser);
                     window.location.reload();
                 } else {
                     console.log(removedUser.error);

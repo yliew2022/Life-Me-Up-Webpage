@@ -10,7 +10,7 @@ const followers = document.querySelectorAll('.follower');
 
 document.addEventListener("DOMContentLoaded", async ()=>{
     try {
-        const response = await fetch(`/api/users/${otherUser}`,{
+        const response = await fetch(`/api/users/${currentUserID}`,{
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -18,12 +18,10 @@ document.addEventListener("DOMContentLoaded", async ()=>{
         })
     
         loggedInUser = await response.json();
-        console.log(loggedInUser)
         if(response.ok){
-            if(loggedInUser.followers.includes(currentUserID)){
+            if(loggedInUser.followers.includes(otherUser)){
                 followButton.classList.add('following');
                 followButton.textContent = 'Following';
-                console.log("This guy is following ", )
             }else{
                 followButton.classList.remove('following');
                 followButton.textContent = 'Follow';
