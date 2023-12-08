@@ -15,7 +15,7 @@ const cookieParser = require('cookie-parser');
 
 // app.use(cors());
 
-const allowedOrigins = ['http://localhost:3000','https://lift-me-up-8da37724f774.herokuapp.com'];
+const allowedOrigins = ['http://localhost:3000','https://lifemeuplatest-4fd195746a8a.herokuapp.com/'];
 
 app.use(cors({
   origin: function (origin, callback) {
